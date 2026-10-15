@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="t">
+  <title id="t">Astrognosia</title>
+  <defs>
+    <radialGradient id="sky" cx="50%" cy="38%" r="65%">
+      <stop offset="0" stop-color="#22305e"/>
+      <stop offset="1" stop-color="#0a0f24"/>
+    </radialGradient>
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#fff3c4" stop-opacity=".95"/>
+      <stop offset="1" stop-color="#ffc14d" stop-opacity="0"/>
+    </radialGradient>
+    <clipPath id="disc"><circle cx="256" cy="256" r="248"/></clipPath>
+  </defs>
+
+  <!-- night sky -->
+  <circle cx="256" cy="256" r="248" fill="url(#sky)"/>
+  <g fill="#cfd8f0" opacity=".8">
+    <circle cx="92" cy="150" r="3.2"/><circle cx="130" cy="88" r="2.2"/>
+    <circle cx="402" cy="128" r="3"/><circle cx="436" cy="214" r="2.2"/>
+    <circle cx="70" cy="262" r="2"/><circle cx="380" cy="72" r="2"/>
+  </g>
+
+  <!-- the star the owl is looking at -->
+  <circle cx="256" cy="74" r="44" fill="url(#glow)"/>
+  <path d="M256 40 L264 66 L290 74 L264 82 L256 108 L248 82 L222 74 L248 66 Z" fill="#fff6d8"/>
+
+  <g clip-path="url(#disc)">
+    <!-- body and head, one round shape with ear tufts -->
+    <path d="M150 196
+             C150 160 166 132 176 116 L196 150
+             C214 142 236 138 256 138 C276 138 298 142 316 150
+             L336 116 C346 132 362 160 362 196
+             C384 236 396 300 386 360 C376 430 324 476 256 476
+             C188 476 136 430 126 360 C116 300 128 236 150 196 Z"
+          fill="#ffc14d"/>
+    <!-- wings -->
+    <path d="M132 300 C112 340 120 400 160 430 C150 390 152 344 168 312 Z" fill="#e9a32f"/>
+    <path d="M380 300 C400 340 392 400 352 430 C362 390 360 344 344 312 Z" fill="#e9a32f"/>
+    <!-- belly, with Cassiopeia's W on it -->
+    <ellipse cx="256" cy="372" rx="78" ry="88" fill="#ffe2a0"/>
+    <path d="M206 352 L230 392 L256 364 L282 392 L306 352" stroke="#1b2550" stroke-width="5"
+          stroke-linecap="round" stroke-linejoin="round" fill="none" opacity=".7"/>
+    <g fill="#1b2550">
+      <circle cx="206" cy="352" r="7.5"/><circle cx="230" cy="392" r="7"/>
+      <circle cx="256" cy="364" r="8"/><circle cx="282" cy="392" r="6.5"/>
+      <circle cx="306" cy="352" r="7"/>
+    </g>
+  </g>
+
+  <!-- eyes, looking up -->
+  <circle cx="206" cy="214" r="50" fill="#fffaf0"/>
+  <circle cx="306" cy="214" r="50" fill="#fffaf0"/>
+  <circle cx="212" cy="196" r="25" fill="#141b38"/>
+  <circle cx="300" cy="196" r="25" fill="#141b38"/>
+  <circle cx="221" cy="187" r="8" fill="#ffffff"/>
+  <circle cx="309" cy="187" r="8" fill="#ffffff"/>
+  <!-- beak -->
+  <path d="M244 254 L268 254 L256 280 Z" fill="#d9822b"/>
+  <!-- feet -->
+  <g fill="#d9822b">
+    <circle cx="226" cy="474" r="12"/><circle cx="286" cy="474" r="12"/>
+  </g>
+
+  <circle cx="256" cy="256" r="248" fill="none" stroke="#ffc14d" stroke-width="8" opacity=".9"/>
+</svg>
