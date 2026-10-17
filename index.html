@@ -1975,49 +1975,56 @@ function paperMarks(x) { return (Math.round(x * 2) / 2).toString(); }
 
 /* ---- js/12-shelves.js ---- */
 /* ==========================================================================
-   Explore's shelves: the stars and objects that carry a "why it is worth
-   knowing" note, grouped so you can browse them rather than having to know
-   the name to search for. The notes and the shelf each sits on come from the
-   data build (build_data.py and notes.py); this only groups and orders them.
-   Shared, so the desktop and the phone list the same things.
+   Explore's shelves: three tables worth browsing rather than searching -
+   the brightest stars in order, the variable stars, and the double and
+   multiple stars - each row with its line on why it is worth knowing (the
+   notes come from the data build, build_data.py and notes.py). Shared, so
+   the desktop and the phone list the same things.
    ========================================================================== */
 'use strict';
 
 var SHELVES = [
-  ['extreme', 'Record-breakers'],
-  ['near', 'Neighbours'],
-  ['planets', 'Planets and discs'],
-  ['bh', 'Black holes and runaways'],
+  ['bright', 'Brightest stars'],
   ['var', 'Variable stars'],
-  ['doubles', 'Double and multiple stars'],
-  ['lore', 'History and curiosities'],
-  ['bright', 'Bright stars'],
-  ['dso', 'Deep sky']
+  ['doubles', 'Double and multiple stars']
+];
+
+/* The 25 brightest stars of the night sky, in the order and with the V
+   magnitudes the standard lists give. Taken from the catalogue instead, the
+   order would come out wrong in two places: alpha Centauri is two entries
+   there (0.01 and 1.33) where every list counts the pair as one star of
+   -0.27, and Betelgeuse's single catalogue figure is one moment of a
+   variable. The last field says why the figure differs from the card. */
+var BRIGHTEST_25 = [
+  ['Sirius', -1.46], ['Canopus', -0.74], ['Rigil Kentaurus', -0.27, 'A and B together'],
+  ['Arcturus', -0.05], ['Vega', 0.03], ['Capella', 0.08], ['Rigel', 0.13], ['Procyon', 0.34],
+  ['Achernar', 0.46], ['Betelgeuse', 0.50, 'variable'], ['Hadar', 0.61], ['Altair', 0.76],
+  ['Acrux', 0.76], ['Aldebaran', 0.86], ['Antares', 0.96, 'variable'], ['Spica', 0.97],
+  ['Pollux', 1.14], ['Fomalhaut', 1.16], ['Deneb', 1.25], ['Mimosa', 1.25], ['Regulus', 1.39],
+  ['Adhara', 1.50], ['Castor', 1.58], ['Shaula', 1.62], ['Gacrux', 1.64]
 ];
 
 var shelfCache = {};
 function shelfItems(key) {
-  if (shelfCache[key]) return shelfCache[key];
-  var out = [];
-  if (key === 'var') out = shelfVariables();
-  else if (key === 'doubles') out = shelfDoubles();
-  else if (key === 'dso') {
-    DSOS.forEach(function (d, i) {
-      if (d.x) out.push({ t: 'dso', i: i, label: dsoTitle(d),
-                         sub: d.type + ' · ' + conName(d.con), note: d.x });
-    });
-  } else {
-    NAMED.forEach(function (rec) {
-      if (rec.k !== key) return;
-      var s = STARS[rec.i];
-      out.push({ t: 'star', i: rec.i, label: starLabel(rec, 'proper') || starLabel(rec, 'both'),
-                 sub: 'mag ' + shelfMag(s[2]) + ' · ' + conName(CONS[s[4]][0]), note: rec.x, mag: s[2] });
-    });
+  if (!shelfCache[key]) {
+    shelfCache[key] = key === 'bright' ? shelfBrightest()
+                    : key === 'var' ? shelfVariables() : shelfDoubles();
   }
-  /* Stars brightest first: the top of every shelf is something you can go
-     out and see, and the ones that need a telescope come after. */
-  if (key !== 'dso') out.sort(function (a, b) { return a.mag - b.mag; });
-  return (shelfCache[key] = out);
+  return shelfCache[key];
+}
+
+function shelfBrightest() {
+  var out = [];
+  BRIGHTEST_25.forEach(function (b, k) {
+    var i = starByDesig(b[0]);
+    if (i < 0) return;
+    var rec = NAMED_BY_STAR[i], m = b[1];
+    out.push({ t: 'star', i: i, label: (k + 1) + '. ' + shelfStarName(i, b[0]),
+               sub: 'mag ' + (m < 0 ? '−' : '') + Math.abs(m).toFixed(2) + (b[2] ? ', ' + b[2] : '') +
+                    ' · ' + conName(CONS[STARS[i][4]][0]),
+               note: (rec && rec.x) || '' });
+  });
+  return out;
 }
 
 function shelfMag(m) { return (Math.abs(m) < 0.05 ? 0 : m).toFixed(1); }
@@ -2053,7 +2060,7 @@ function shelfVariables() {
     out.push({ t: 'star', i: rec.i, label: shelfStarName(rec.i, ''),
                sub: 'mag ' + shelfMag(st[2]) + ' · ' + conName(CONS[st[4]][0]), note: rec.x, mag: st[2] });
   });
-  return out;
+  return shelfByMag(out);
 }
 
 /* The double-star table: bound or only in line, how far apart, the two
@@ -2061,7 +2068,7 @@ function shelfVariables() {
    by Dawes' limit. The sub-pairs the desktop adds for drawing are left out;
    the Double Double's own row covers them. */
 function shelfDoubles() {
-  return DOUBLES.filter(function (d) { return !d.sub; }).map(function (d) {
+  return shelfByMag(DOUBLES.filter(function (d) { return !d.sub; }).map(function (d) {
     var sep = d.sep == null ? null : (d.sep >= 60 ? (d.sep / 60).toFixed(1) + '′' : d.sep + '″');
     var v = doubleSplitVerdict(d.sep, 150);
     var bits = [d.kind];
@@ -2072,7 +2079,13 @@ function shelfDoubles() {
                      : (v.splits ? 'splits in 150 mm' : 'too close for 150 mm'));
     return { t: 'star', i: d.idx, label: shelfStarName(d.idx, d.name), sub: bits.join(' · '),
              note: d.note || '', mag: Math.min(d.magA, d.magB) };
-  });
+  }));
+}
+
+/* Brightest first: the top of a shelf is something you can go out and see,
+   and the ones that need a telescope come after. */
+function shelfByMag(items) {
+  return items.sort(function (a, b) { return a.mag - b.mag; });
 }
 
 function shelfRandom() {
@@ -3570,8 +3583,8 @@ function drawStarLabels() {
     if (!LabelGrid.claim(p.x + r + 3, p.y, w)) continue;
     /* A star just above the limit is drawn a fraction of a pixel wide and
        nearly transparent, so its name used to float beside nothing (Uklun,
-       7.47, at the default 7.5). A star with a name on the chart gets a dot
-       you can see. */
+       7.47, with the limit at 7.5). A star with a name on the chart gets a
+       dot you can see. */
     if (lm - STARS[i][2] < 0.55 || r < 1) {
       ctx.save();
       ctx.globalAlpha = 0.85;
@@ -3594,17 +3607,22 @@ function drawStarLabels() {
   }
 }
 
-/* Stars worth knowing that are fainter than the chart is drawn to - Barnard's
-   Star, Proxima, the two stars of M40. Once the field is narrow enough to be
-   looking for them they are drawn anyway: a faint dot in a thin ring, the ring
-   saying "fainter than your limit", and labelled. Only while the chart is
-   labelling stars at all, so a drill with labels off does not give them away,
-   and never on the printed chart, which shows what it says it shows. */
+/* Stars worth knowing that are fainter than the catalogue's 7.5 - Barnard's
+   Star, Proxima, the two stars of M40, TRAPPIST-1. With the limit slider all
+   the way up, and the field narrow enough to be looking for them, they are
+   drawn: a faint dot in a thin ring, the ring saying "fainter than the
+   catalogue", and labelled. Below the top of the slider they are not, like
+   any other star: a magnitude 8 star has no business on a chart drawn to 6.
+   Only while the chart is labelling stars at all, so a drill with labels off
+   does not give them away, and never on the printed chart, which shows what
+   it says it shows. */
 var NOTABLE_RING = 4.5;
+var NOTABLE_AT_LIMIT = 7.5;                       // the top of both limit sliders
 var notableDrawn = [];
 function drawNotableStars() {
   notableDrawn.length = 0;
   if (OPT.starLabels === 'none' || OPT.printChart || Sky.fov > 40) return;
+  if (OPT.limMag < NOTABLE_AT_LIMIT - 1e-6) return;
   var ctx = Sky.ctx, lim = effLimMag(), k = zoomK();
   ctx.save();
   ctx.lineWidth = 1;
