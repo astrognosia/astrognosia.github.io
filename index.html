@@ -122,7 +122,7 @@
 }html.ui-desktop .charttools .bar > *{ display: none; }html.ui-desktop .charttools .bar > #btnTimer,html.ui-desktop .charttools .bar > #btnRuler,html.ui-desktop .charttools .bar > #btnCompass,html.ui-desktop .charttools .bar > #btnPoint,html.ui-desktop .charttools .bar > #btnRotate{ display: inline-flex; }html.ui-desktop .charttools .barpeek{ display: none; }html.ui-desktop #spOverlay{ position: fixed; inset: 44px 0 0 0; z-index: 19; background: rgba(4,6,12,.82);
   backdrop-filter: blur(2px); overflow: auto; }html.ui-desktop #spWrap{ display: flex; gap: 18px; align-items: flex-start; padding: 18px;
   min-height: 100%; box-sizing: border-box; }html.ui-desktop #spSheet{ flex: 1 1 auto; display: flex; align-items: flex-start;
-  justify-content: center; }html.ui-desktop #spSheet img{ width: min(78vh, 100%); height: auto; border-radius: 8px;
+  justify-content: center; }html.ui-desktop #spSheet img,html.ui-desktop #spSheet canvas{ width: min(78vh, 100%); height: auto; border-radius: 8px;
   box-shadow: 0 10px 40px rgba(0,0,0,.55); background: #fff; }html.ui-desktop #spSide{ flex: 0 0 320px; max-width: 340px; background: var(--panel, #0c1018);
   border: 1px solid var(--line, #222b3d); border-radius: 12px; padding: 14px;
   max-height: calc(100vh - 36px); overflow: auto; }html.ui-desktop #spSide h2{ margin: 14px 0 6px; font-size: 13px; letter-spacing: .06em;
@@ -3047,7 +3047,10 @@ function drawPolyline(pts, colour, width) {
 /* The grid subdivides as you zoom, the way a planetarium's does: whole hours
    across a wide field, then twenty minutes, then five, so the spacing on screen
    stays roughly constant instead of collapsing into a solid wash. */
-var GRID_DEC_STEPS = [1, 2, 5, 10, 15, 30];              // degrees
+/* Never finer than a minute of right ascension or half a degree of
+   declination: nobody reads a chart closer than that, and a finer grid only
+   costs lines. */
+var GRID_DEC_STEPS = [0.5, 1, 2, 5, 10, 15, 30];         // degrees
 var GRID_RA_STEPS = [1, 2, 5, 10, 15, 20, 30, 60, 120];  // minutes of time
 
 function pickGridStep(steps, target) {
@@ -3121,13 +3124,15 @@ function drawGrid() {
   var dHi = Math.min(90, Math.ceil((v.d1 + 6) / 3) * 3);
   var raSpan = v.allRa ? null : (v.ra1 - v.ra0) / 2 + 6;
 
+  /* Two paths, the whole hours and every 30 degrees in the brighter one,
+     each stroked once. */
+  var major = new Path2D(), minor = new Path2D();
   for (i = 0; i < 1440; i += st.raMin) {                 // meridians
     if (!gridRaInView(i / 4, v)) continue;
     var pts = [];
     for (j = dLo; j <= dHi; j += 3) pts.push([i / 4, j]);
     if (pts.length < 2) continue;
-    ctx.strokeStyle = (i % 60 === 0) ? '#243046' : '#1a2130';
-    strokeRaDecPath(pts, false);
+    traceRaDecPath(i % 60 === 0 ? major : minor, pts, false);
   }
 
   /* A parallel is a circle of constant declination: only the arc of it that
@@ -3154,9 +3159,10 @@ function drawGrid() {
     if (i < v.d0 || i > v.d1) continue;
     var pts2 = parallel(i);
     if (pts2.length < 2) continue;
-    ctx.strokeStyle = (i % 30 === 0) ? '#243046' : '#1a2130';
-    strokeRaDecPath(pts2, false);
+    traceRaDecPath(i % 30 === 0 ? major : minor, pts2, false);
   }
+  ctx.strokeStyle = '#1a2130'; ctx.stroke(minor);
+  ctx.strokeStyle = '#243046'; ctx.stroke(major);
 
   if (v.d0 <= 0 && v.d1 >= 0) {
     ctx.strokeStyle = '#2a3549'; ctx.lineWidth = 1.2;
@@ -3167,45 +3173,77 @@ function drawGrid() {
   if (OPT.gridLabels !== false) drawGridLabels(st);
 }
 
-/* Where a gridline crosses a fixed screen line. Labels anchored to the centre
-   of the view slide about as you drag; anchored to the edge they stay put. */
-function gridCrossing(pts, horizontal, target) {
-  var prev = null, i, p, a, b, t;
-  for (i = 0; i < pts.length; i++) {
-    p = projRaDec(pts[i][0], pts[i][1]);
-    if (p && prev) {
-      a = horizontal ? prev.y : prev.x;
-      b = horizontal ? p.y : p.x;
-      if (a !== b && (a - target) * (b - target) <= 0) {
-        t = (target - a) / (b - a);
-        return { x: prev.x + (p.x - prev.x) * t, y: prev.y + (p.y - prev.y) * t };
+/* Labels where each grid line meets the edge of the view.
+
+   They used to be found by building every grid line in the sky as a coarse
+   polyline and projecting all of it to see where it crossed the edge - at a
+   minute of right ascension that is 1440 meridians of 45 points, sixty-five
+   thousand projections a frame for a dozen labels, and it was most of the
+   frame whenever the grid was on. The chords were 4 degrees long, too, so on
+   a narrow field a label sat well away from its line.
+
+   So read the sky off the edge instead: step along the bottom of the view
+   (and the top, for a meridian that never reaches the bottom), find where the
+   right ascension passes each grid value, and close in on it; the same down
+   the left and right sides for declination. A few hundred unprojections, and
+   each label lands on its line. Anchored to the edge, too, the labels stay
+   put while you drag rather than sliding with the centre of the view. */
+function gridEdgeCrossings(kind, fixed, from, to, horizontal, stepVal) {
+  var out = {}, n = Math.max(8, Math.ceil(Math.abs(to - from) / 16));
+  function val(s) {
+    var rd = horizontal ? unproject(s, fixed) : unproject(fixed, s);
+    return kind === 'ra' ? (rd[0] * 4 + 1440) % 1440 : rd[1];   // minutes of RA, or degrees
+  }
+  function diff(b, a) { return kind === 'ra' ? ((b - a + 2160) % 1440) - 720 : b - a; }
+  var s0 = from, v0 = val(s0);
+  for (var k = 1; k <= n; k++) {
+    var s1 = from + (to - from) * k / n, v1 = val(s1), dv = diff(v1, v0);
+    /* A jump of hours between two samples sixteen pixels apart is the pole,
+       or the back of the sky - nothing to label there. */
+    if (Math.abs(dv) < (kind === 'ra' ? 240 : 30) && dv !== 0) {
+      var lo = Math.min(0, dv), hi = Math.max(0, dv);
+      var g = Math.ceil((v0 + lo) / stepVal) * stepVal;
+      for (; g <= v0 + hi; g += stepVal) {
+        var key = kind === 'ra' ? ((g % 1440) + 1440) % 1440 : g;
+        if (key in out) continue;
+        /* Bisect between the two samples for the exact crossing. */
+        var a = s0, b = s1, fa = diff(val(a), g);
+        for (var it = 0; it < 12; it++) {
+          var m = (a + b) / 2, fm = diff(val(m), g);
+          if ((fm < 0) === (fa < 0)) { a = m; fa = fm; } else b = m;
+        }
+        out[key] = (a + b) / 2;
       }
     }
-    prev = p;
+    s0 = s1; v0 = v1;
   }
-  return null;
+  return out;
 }
 
 function drawGridLabels(st) {
-  var ctx = Sky.ctx, i, j, pts, p;
+  var ctx = Sky.ctx, W = Sky.w, H = Sky.h, g;
   ctx.font = '11px ui-monospace, Consolas, monospace';
   ctx.fillStyle = '#66748f';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
 
-  for (i = 0; i < 1440; i += st.raMin) {
-    pts = [];
-    for (j = -88; j <= 88; j += 4) pts.push([i / 4, j]);
-    p = gridCrossing(pts, true, Sky.h - 24) || gridCrossing(pts, true, 24);
-    if (p && p.x > 34 && p.x < Sky.w - 34) ctx.fillText(fmtGridRA(i), p.x, p.y);
+  var bottom = gridEdgeCrossings('ra', H - 24, 0, W, true, st.raMin);
+  var top = gridEdgeCrossings('ra', 24, 0, W, true, st.raMin);
+  for (g in top) if (!(g in bottom)) bottom[g] = -top[g] - 1;     // negative: on the top edge
+  for (g in bottom) {
+    var x = bottom[g] >= 0 ? bottom[g] : -bottom[g] - 1, y = bottom[g] >= 0 ? H - 24 : 24;
+    if (x > 34 && x < W - 34) ctx.fillText(fmtGridRA(Math.round(+g)), x, y);
   }
 
   ctx.textAlign = 'left';
-  for (i = -90 + st.dec; i <= 90 - st.dec; i += st.dec) {
-    pts = [];
-    for (j = 0; j <= 360; j += 4) pts.push([j, i]);
-    p = gridCrossing(pts, false, 12) || gridCrossing(pts, false, Sky.w - 74);
-    if (p && p.y > 18 && p.y < Sky.h - 34) ctx.fillText(fmtGridDec(i), p.x + 5, p.y);
+  var left = gridEdgeCrossings('dec', 12, 0, H, false, st.dec);
+  var right = gridEdgeCrossings('dec', W - 74, 0, H, false, st.dec);
+  for (g in right) if (!(g in left)) left[g] = -right[g] - 1;
+  for (g in left) {
+    var d = +g;
+    if (Math.abs(d) >= 90 - 1e-9) continue;                          // the poles
+    var yy = left[g] >= 0 ? left[g] : -left[g] - 1, xx = left[g] >= 0 ? 12 : W - 74;
+    if (yy > 18 && yy < H - 34) ctx.fillText(fmtGridDec(Math.round(d * 2) / 2), xx + 5, yy);
   }
 }
 
@@ -22207,19 +22245,20 @@ var SkyPrint = {
   /* Where the sheet gets its place and time. The planetarium already holds a
      latitude, a longitude and a moment, and keeping one copy means the chart
      is always of the sky the rest of the app is showing. */
+  /* A sheet opens bare - the stars and the horizon, nothing else - and you
+     add what the exercise allows. A blank chart is the usual task. */
   opts: {
-    azimuthRing: true,
-    cardinals: false,     /* the degrees carry the orientation; the letters are
-                             an extra, and the sheet reads cleaner without */
-    equator: true,
-    ecliptic: true,
+    azimuthRing: false,
+    cardinals: false,
+    equator: false,
+    ecliptic: false,
     galactic: false,
-    conLines: true,
-    conNames: true,
+    conLines: false,
+    conNames: false,
     bounds: false,
     starNames: 'none',    /* none | proper | bayer | both */
-    planets: true,
-    planetNames: true,
+    planets: false,
+    planetNames: true,    /* once planets are on */
     dsos: false,
     dsoLabels: false,
     /* Stereographic is what Stellarium draws and what an olympiad chart
@@ -22230,7 +22269,7 @@ var SkyPrint = {
     /* Which lines of the caption are printed. A sheet for practice may want
        the sidereal time or the place left off - finding them is the task. */
     capPlace: true, capTime: true, capLst: true, capMag: true, capProj: true,
-    grid: false,          /* RA every hour, Dec every 10 degrees, labelled */
+    grid: false,          /* RA every hour, Dec every 10 degrees, unlabelled */
     paper: true,          /* black on white, which is what a printer wants */
   tzMin: 0,             /* minutes east of Greenwich for the clock you type */
   tzAuto: true,         /* …derived from the longitude until you set it */
@@ -22409,43 +22448,22 @@ function skyPrintGrid(ctx, lst, px) {
   ctx.strokeStyle = paper ? '#b4b4b4' : '#2a3a55';
   ctx.lineWidth = Math.max(0.6, px / 1500);
   ctx.setLineDash([]);
+  ctx.beginPath();                                    // one path, one stroke
   for (h = 0; h < 24; h++) {                          // meridians
     pts = [];
     for (j = -88; j <= 88; j += 2) pts.push([h * 15, j]);
-    strokeRaDecPath(pts, false);
+    traceRaDecPath(ctx, pts, false);
   }
   for (d = -80; d <= 80; d += 10) {                   // parallels
     if (d === 0 && SkyPrint.opts.equator) continue;   // drawn already, dashed
     pts = [];
     for (j = 0; j <= 360; j += 2) pts.push([j, d]);
-    strokeRaDecPath(pts, false);
+    traceRaDecPath(ctx, pts, false);
   }
+  ctx.stroke();
 
-  /* Big enough to read on paper, dark, and lifted off the stars and lines by
-     a halo in the paper's colour - the first version was small grey type that
-     disappeared into the chart. */
-  var f = Math.max(10, Math.round(px / 72));
-  ctx.font = '700 ' + f + 'px ui-sans-serif, system-ui, sans-serif';
-  ctx.textBaseline = 'middle';
-  ctx.lineJoin = 'round';
-  ctx.lineWidth = Math.max(2.5, px / 260);
-  function label(ra, dec, txt, dx, dy, align) {
-    if (ptRaDecToAltAz(ra, dec, Sky.dec, lst).alt <= 2) return;
-    var q = projRaDec(ra, dec);
-    if (!q) return;
-    ctx.textAlign = align;
-    ctx.strokeStyle = paper ? '#ffffff' : '#05060a';
-    ctx.strokeText(txt, q.x + dx, q.y + dy);
-    ctx.fillStyle = paper ? '#1f1f1f' : '#b9c8e8';
-    ctx.fillText(txt, q.x + dx, q.y + dy);
-  }
-  /* Hours along the celestial equator, just above it; declinations beside
-     the local meridian, not on top of its line. */
-  for (h = 0; h < 24; h++) label(h * 15, 0, h + 'h', 0, -f * 0.8, 'center');
-  for (d = -80; d <= 80; d += 10) {
-    if (d === 0) continue;
-    label(lst, d, (d > 0 ? '+' : '−') + Math.abs(d) + '°', f * 0.35, 0, 'left');
-  }
+  /* No numbers on it: reading the hour and the declination off the lines is
+     the exercise, and the labels gave it away. */
   ctx.restore();
 }
 
@@ -22618,9 +22636,8 @@ function skyPrintSheet(ctx, px) {
     if (line2.length) ctx.fillText(line2.join('     '), x0, base + f * (o.capPlace ? 1.35 : 0));
     ctx.textAlign = 'right';
     if (o.capProj) {
-      ctx.fillText(o.projection === 'equidistant'
-        ? 'Azimuthal equidistant:  altitude = 90\u00b0 \u00d7 (1 \u2212 r/R)'
-        : 'Stereographic:  altitude = 90\u00b0 \u2212 2 arctan(r/R)', x1, base);
+      ctx.fillText(o.projection === 'equidistant' ? 'Azimuthal equidistant projection'
+                                                  : 'Stereographic projection', x1, base);
     }
     if (o.capMag) {
       ctx.fillText('Stars to magnitude ' + o.limMag.toFixed(1), x1, base + f * 1.35);
@@ -23030,7 +23047,7 @@ function skyPrintPanelHTML() {
   var iso = skyLocalIso(p.dateMs);
   return '' +
     '<div id="spWrap">' +
-    '<div id="spSheet"><img id="spImg" alt="sky chart"></div>' +
+    '<div id="spSheet"><canvas id="spImg" aria-label="sky chart"></canvas></div>' +
     '<div id="spSide">' +
     '<div class="spHead">Print a chart<button class="btn sm" id="spClose">×</button></div>' +
 
@@ -23084,7 +23101,7 @@ function skyPrintPanelHTML() {
     skyPrintCheckbox('capTime', 'Date and time') +
     skyPrintCheckbox('capLst', 'Sidereal time') +
     skyPrintCheckbox('capMag', 'Magnitude limit') +
-    skyPrintCheckbox('capProj', 'Projection and how to read altitude') +
+    skyPrintCheckbox('capProj', 'Projection') +
 
     '<h2>Star names</h2>' +
     '<select id="spNames">' +
@@ -23113,12 +23130,23 @@ function skyPrintPanelHTML() {
     '</div></div>';
 }
 
+/* A smaller draw for the preview: the same sheet, quick enough to redraw on
+   every tick of a slider - at most once a frame however fast the ticks come,
+   and copied straight onto a canvas. It used to be encoded as a PNG and
+   decoded again into an <img> for every tick, which cost more than drawing
+   it and made the sliders stutter. */
+var _spPending = false;
 function skyPrintRefresh() {
-  var img = el('spImg');
-  if (!img) return;
-  /* A smaller draw for the preview: the same sheet, quick enough to redraw on
-     every tick of a slider. */
-  img.src = skyPrintImage(900).toDataURL('image/png');
+  if (_spPending) return;
+  _spPending = true;
+  requestAnimationFrame(function () {
+    _spPending = false;
+    var cv = el('spImg');
+    if (!cv) return;
+    var src = skyPrintImage(900);
+    if (cv.width !== src.width || cv.height !== src.height) { cv.width = src.width; cv.height = src.height; }
+    cv.getContext('2d').drawImage(src, 0, 0);
+  });
 }
 
 function skyPrintBind() {
