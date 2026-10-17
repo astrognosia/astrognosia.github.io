@@ -146,7 +146,7 @@
 }
 @media (max-width: 900px) {html.ui-desktop .tab{ padding: 5px 6px; font-size: 13px; }html.ui-desktop .bar button.btn.sm{ padding: 3px 6px; font-size: 11.5px; }
 }html.ui-desktop .q .target.inl{ display: inline; font-size: inherit; margin: 0; }html.ui-desktop .panel a{ color: #7fb4ff; }html.ui-desktop .panel a:visited{ color: #a99bff; }html.ui-desktop .exList{ margin: 8px 0 4px; padding-left: 22px; }html.ui-desktop .exList li{ margin: 3px 0; }html.ui-desktop .exList li.done{ color: var(--dim); text-decoration: line-through; }html.ui-desktop .exRow{ display: flex; align-items: center; gap: 8px; margin: 6px 0; }html.ui-desktop .exRow b{ min-width: 34px; color: var(--accent); }html.ui-desktop .exRow input{ flex: 1; }html.ui-desktop .exScheme{ margin: 8px 0; border: 1px solid var(--edge-soft); border-radius: 8px; overflow: hidden; }html.ui-desktop .exScheme div{ display: flex; justify-content: space-between; gap: 10px; padding: 5px 9px;
-  font-size: 12.5px; border-bottom: 1px solid var(--edge-soft); }html.ui-desktop .exScheme div:last-child{ border-bottom: 0; }html.ui-desktop .exScheme div b{ white-space: nowrap; }html.ui-desktop .exScheme .ok b{ color: var(--good, #56d98a); }html.ui-desktop .exScheme .part b{ color: var(--accent); }html.ui-desktop .exScheme .no b{ color: #ff6b6b; }html.ui-desktop .list.notes{ max-height: 360px; }html.ui-desktop .list.notes .it{ display: block; padding: 7px 10px; }html.ui-desktop .list.notes .it .nm{ display: block; font-weight: 600; }html.ui-desktop .list.notes .it .nm .st{ font-weight: 400; margin-left: 4px; }html.ui-desktop .list.notes .it .x{ display: block; margin-top: 2px; font-size: 12px; line-height: 1.4; color: #8f99ad; }
+  font-size: 12.5px; border-bottom: 1px solid var(--edge-soft); }html.ui-desktop .exScheme div:last-child{ border-bottom: 0; }html.ui-desktop .exScheme div b{ white-space: nowrap; }html.ui-desktop .exScheme .ok b{ color: var(--good, #56d98a); }html.ui-desktop .exScheme .part b{ color: var(--accent); }html.ui-desktop .exScheme .no b{ color: #ff6b6b; }html.ui-desktop .list.notes{ max-height: 360px; }html.ui-desktop .list.notes .it{ display: block; padding: 7px 10px; }html.ui-desktop .list.notes .it .nm{ display: block; font-weight: 600; }html.ui-desktop .list.notes .it .nm .st{ font-weight: 400; margin-left: 4px; }html.ui-desktop .list.notes .it .x{ display: block; margin-top: 2px; font-size: 12px; line-height: 1.4; color: #8f99ad; }html.ui-desktop .pageHead{ display: flex; align-items: center; justify-content: space-between; gap: 8px; }html.ui-desktop .pageHead h3{ margin: 0; }html.ui-desktop .credit h2 + p{ margin-top: 2px; }html.ui-desktop .credit p.note{ font-size: 11.5px; }
 
 html.ui-mobile *,html.ui-mobile *::before,html.ui-mobile *::after{ box-sizing: border-box; -webkit-tap-highlight-color: transparent; }html.ui-mobile,html.ui-mobile body{
   height: 100%; margin: 0; overscroll-behavior: none;
@@ -922,147 +922,36 @@ function saveStore(o) {
    ========================================================================== */
 
 var CREDITS = [
-  {
-    name: 'Stellarium constellation figures',
-    desc: 'The "Stellarium" constellation shapes (the default): the stick figures of ' +
-          "Stellarium's western sky culture.",
-    notice: 'The Stellarium team',
-    source: 'https://github.com/Stellarium/stellarium-skycultures/tree/master/western',
-    license: 'CC BY-SA',
-    licenseLink: 'https://creativecommons.org/licenses/by-sa/4.0/'
-  },
-  {
-    name: 'IAU chart constellation figures',
-    desc: 'The "IAU charts" constellation shapes in Settings: the stick figures on the IAU ' +
-          'constellation charts, designed by Alan MacRobert for Sky & Telescope. Read from ' +
-          "Stellarium's Sky & Telescope sky culture.",
-    notice: 'Sky & Telescope; digitised by Paul Krizak and Jonathan E. Piskor, reworked by the Stellarium team',
-    source: 'https://github.com/Stellarium/stellarium-skycultures/tree/master/western_SnT',
-    license: 'CC BY-SA 2.0',
-    licenseLink: 'https://creativecommons.org/licenses/by-sa/2.0/'
-  },
-  {
-    name: 'Hipparcos catalogue',
-    desc: 'Star positions, magnitudes and colours: the main catalogue, read through VizieR, ' +
-          "with each position brought from the catalogue's epoch, 1991.25, to 2000 by the " +
-          "star's own proper motion.",
-    notice: 'ESA (1997), The Hipparcos and Tycho Catalogues, ESA SP-1200',
-    source: 'https://vizier.cds.unistra.fr/viz-bin/VizieR-3?-source=I/239/hip_main',
-    license: 'Used with acknowledgement. This app has made use of the VizieR catalogue ' +
-             'access tool, CDS, Strasbourg, France.'
-  },
-  {
-    name: 'SIMBAD',
-    desc: 'The Bayer and Flamsteed designations and the traditional names of the ' +
-          'Hipparcos stars; the positions of the Caldwell objects and most of their ' +
-          'angular sizes; and the positions, magnitudes and catalogue numbers of the ' +
-          'notable stars, with V magnitudes from APASS, UCAC4 and NOMAD through VizieR ' +
-          'where SIMBAD has none.',
-    notice: 'CDS, Strasbourg Astronomical Observatory, France',
-    source: 'https://simbad.cds.unistra.fr/simbad/',
-    license: 'Used with acknowledgement. This app has made use of the SIMBAD database, ' +
-             'operated at CDS, Strasbourg, France.'
-  },
-  {
-    name: 'IAU Catalog of Star Names',
-    desc: 'Official proper names of stars, from the IAU Working Group on Star Names.',
-    notice: 'International Astronomical Union, Working Group on Star Names',
-    source: 'https://exopla.net/star-names/modern-iau-star-names/',
-    license: 'Used with credit to the IAU WGSN'
-  },
-  {
-    name: 'IAU constellation boundaries',
-    desc: 'The 88 constellation boundaries as defined by Delporte (1930) for the IAU, ' +
-          'digitised by Davenhall and Leggett (1989), and precessed here from 1875 to 2000. ' +
-          'The ecliptic and the galactic equator are computed by the app.',
-    notice: 'International Astronomical Union; A. C. Davenhall and S. K. Leggett',
-    source: 'https://cdsarc.cds.unistra.fr/viz-bin/cat/VI/49',
-    license: 'Used with acknowledgement (CDS, Strasbourg)'
-  },
-  {
-    name: 'Deep-sky photographs',
-    desc: 'For each object, the photograph its Wikipedia article leads with, and for many ' +
-          'Messier objects a second view, all from Wikimedia Commons. Each one carries its ' +
-          'author and licence under the photograph, and all of them are listed below. They ' +
-          'have been resized and recompressed for the web.',
-    notice: 'The individual photographers and institutions listed below',
-    source: 'https://commons.wikimedia.org/',
-    license: 'Each photograph under its own licence: CC BY, CC BY-SA, CC0 or public domain',
-    photos: true
-  },
-  {
-    name: 'Wikipedia',
-    desc: "The Messier and Caldwell catalogues as the tables in Wikipedia's articles " +
-          "'Messier object' and 'Caldwell catalogue' give them: each object's catalogue " +
-          'numbers, common names, type, distance and magnitude, and the Messier objects\' ' +
-          "positions and angular sizes; the positions or sizes of a few large Caldwell objects " +
-          "(the Hyades, the Coalsack, the Rosette and Cave nebulae) from their own articles; and " +
-          "the choice of each object's lead photograph.",
-    notice: 'Wikipedia contributors',
-    source: 'https://en.wikipedia.org/wiki/Messier_object',
-    license: 'Text CC BY-SA 4.0',
-    licenseLink: 'https://creativecommons.org/licenses/by-sa/4.0/'
-  },
-  {
-    name: 'OpenNGC',
-    desc: 'Angular sizes of the Caldwell objects that SIMBAD gives none for.',
-    notice: 'Mattia Verga and the OpenNGC contributors',
-    source: 'https://github.com/mattiaverga/OpenNGC',
-    license: 'CC BY-SA 4.0',
-    licenseLink: 'https://creativecommons.org/licenses/by-sa/4.0/'
-  },
-  {
-    name: 'Sun, Moon and planet images',
-    desc: 'Full-disc images of the Sun, the Moon and the seven other planets.',
-    notice: 'NASA: Solar Dynamics Observatory, Scientific Visualization Studio, and ' +
-            'JPL Photojournal (PIA11245, PIA00072, PIA02653, PIA22946, PIA01364, PIA18182, PIA01492)',
-    source: 'https://photojournal.jpl.nasa.gov/',
-    license: 'Public domain (NASA media usage guidelines)',
-    licenseLink: 'https://www.nasa.gov/nasa-brand-center/images-and-media/'
-  },
-  {
-    name: 'Natural Earth',
-    desc: 'Coastlines and borders for the place picker on the sky-chart map.',
-    notice: 'Made with Natural Earth',
-    source: 'https://www.naturalearthdata.com/',
-    license: 'Public domain',
-    licenseLink: 'https://www.naturalearthdata.com/about/terms-of-use/'
-  },
-  {
-    name: 'Star Charts 101 and Practices',
-    desc: 'The Messier priority tiers, the order of the great-circle landmarks, the ' +
-          'chart-reading conventions and several worked methods are adapted from this book.',
-    notice: '© 2026 Fahim Rajit Hossain Shwadhin',
-    source: 'https://github.com/Rajit13/Star-Maps-101-and-Practices',
-    license: 'CC BY-NC-SA 4.0',
-    licenseLink: 'https://creativecommons.org/licenses/by-nc-sa/4.0/'
-  },
-  {
-    name: 'IOAA observational rounds',
-    desc: 'Tasks from the observational rounds of the International Olympiad on Astronomy ' +
-          'and Astrophysics, 2007 to 2025, reproduced or adapted for practice and marked ' +
-          'against their published schemes. Each round links to its original paper. The ' +
-          '2026 round is a constructed mock, not an official paper. This app is not ' +
-          'affiliated with or endorsed by the IOAA.',
-    notice: 'The organising committees of each IOAA',
-    source: 'https://ioaastrophysics.org/',
-    license: 'No licence stated; used for non-commercial practice with attribution'
-  },
-  {
-    name: 'Astronomical Algorithms',
-    desc: "The low-precision series for the Sun's and Moon's positions, and the " +
-          'planetary mean elements.',
-    notice: 'Jean Meeus, Astronomical Algorithms, 2nd ed., Willmann-Bell (1998)',
-    sourceText: 'Book, ISBN 978-0-943396-61-3',
-    license: 'Methods implemented from the book; no text reproduced'
-  },
-  {
-    name: 'JPL Solar System Dynamics',
-    desc: "The orbits of Saturn's moons used in the Kepler's-third-law drill.",
-    notice: 'NASA Jet Propulsion Laboratory',
-    source: 'https://ssd.jpl.nasa.gov/',
-    license: 'Public domain'
-  }
+  { name: 'Hipparcos', desc: 'Star positions, magnitudes and colours.',
+    notice: 'ESA 1997, via VizieR (CDS)', source: 'https://vizier.cds.unistra.fr/viz-bin/VizieR-3?-source=I/239/hip_main',
+    license: 'With acknowledgement' },
+  { name: 'SIMBAD', desc: 'Star designations and names; Caldwell positions and sizes.',
+    notice: 'CDS, Strasbourg', source: 'https://simbad.cds.unistra.fr/simbad/',
+    license: 'With acknowledgement' },
+  { name: 'IAU', desc: 'Official star names and constellation boundaries.',
+    notice: 'IAU WGSN; Delporte 1930, digitised by Davenhall and Leggett',
+    source: 'https://exopla.net/star-names/modern-iau-star-names/', license: 'With credit' },
+  { name: 'Stellarium', desc: 'Constellation figures, including the IAU charts\' set by Sky & Telescope.',
+    notice: 'The Stellarium team; Sky & Telescope', source: 'https://github.com/Stellarium/stellarium-skycultures',
+    license: 'CC BY-SA', licenseLink: 'https://creativecommons.org/licenses/by-sa/4.0/' },
+  { name: 'Wikipedia', desc: 'Messier and Caldwell catalogues: names, types, distances, sizes.',
+    notice: 'Wikipedia contributors', source: 'https://en.wikipedia.org/wiki/Messier_object',
+    license: 'CC BY-SA 4.0', licenseLink: 'https://creativecommons.org/licenses/by-sa/4.0/' },
+  { name: 'OpenNGC', desc: 'A few Caldwell sizes.',
+    notice: 'Mattia Verga and contributors', source: 'https://github.com/mattiaverga/OpenNGC',
+    license: 'CC BY-SA 4.0', licenseLink: 'https://creativecommons.org/licenses/by-sa/4.0/' },
+  { name: 'Photographs', desc: 'Deep-sky photographs from Wikimedia Commons, each credited under it.',
+    notice: 'The photographers listed below', source: 'https://commons.wikimedia.org/',
+    license: 'Each its own: CC BY, CC BY-SA, CC0 or public domain', photos: true },
+  { name: 'NASA', desc: 'Sun, Moon and planet images; the orbits of Saturn\'s moons.',
+    notice: 'NASA SDO, SVS, JPL', source: 'https://photojournal.jpl.nasa.gov/', license: 'Public domain' },
+  { name: 'Natural Earth', desc: 'The world map.',
+    notice: 'Made with Natural Earth', source: 'https://www.naturalearthdata.com/', license: 'Public domain' },
+  { name: 'Star Charts 101 and Practices', desc: 'Messier priority tiers and several methods.',
+    notice: '© 2026 Fahim Rajit Hossain Shwadhin', source: 'https://github.com/Rajit13/Star-Maps-101-and-Practices',
+    license: 'CC BY-NC-SA 4.0', licenseLink: 'https://creativecommons.org/licenses/by-nc-sa/4.0/' },
+  { name: 'Astronomical Algorithms', desc: 'Formulas for the Sun, Moon and planets.',
+    notice: 'Jean Meeus, 2nd ed. (1998)', sourceText: 'ISBN 978-0-943396-61-3', license: 'Methods only' }
 ];
 
 function creditLink(url, text) {
@@ -1095,28 +984,18 @@ function creditPhotosHTML() {
 }
 
 function creditsHTML() {
-  function line(label, html) {
-    return '<p><span class="note">' + label + ':</span> ' + html + '</p>';
-  }
-  return '<p class="note">This window contains credits for the resources used by the app.</p>' +
-    '<div class="credit"><h2>Privacy</h2><p>The app keeps your progress and settings in ' +
-    'this browser only. It has no accounts and no advertising. ' +
-    (typeof SITE_ANALYTICS !== 'undefined' && SITE_ANALYTICS === 'cloudflare'
-      ? 'On astrognosia.github.io it counts visits with Cloudflare Web Analytics, which sets ' +
-        'no cookies, stores nothing in your browser and does not identify you: it records, in ' +
-        'aggregate, which page was opened, the site you came from, your country, and the ' +
-        'browser and kind of device. Your progress, answers and settings are never sent. ' +
-        'Apart from that, the only requests the app makes are for its own photographs.'
-      : 'It has no analytics, and it sends nothing anywhere; the only requests it makes are ' +
-        'for its own photographs.') +
-    '</p></div>' +
+  var analytics = typeof SITE_ANALYTICS !== 'undefined' && SITE_ANALYTICS === 'cloudflare';
+  return '<div class="credit"><h2>Privacy</h2><p>Progress and settings stay in this browser. ' +
+    'No accounts, no ads. ' +
+    (analytics ? 'Visits are counted by Cloudflare Web Analytics, without cookies or anything ' +
+                 'that identifies you.'
+               : 'Nothing is sent anywhere.') + '</p></div>' +
     CREDITS.map(function (r) {
-      return '<div class="credit"><h2>' + esc(r.name) + '</h2>' +
-        line('Copyright notice', esc(r.notice)) +
-        line('Description', esc(r.desc)) +
-        line('Source', r.source ? creditLink(r.source) : esc(r.sourceText)) +
-        line('Licence', esc(r.license)) +
-        (r.licenseLink ? line('Licence link', creditLink(r.licenseLink)) : '') +
+      var lic = r.licenseLink ? creditLink(r.licenseLink, r.license) : esc(r.license);
+      var src = r.source ? creditLink(r.source, r.source.replace(/^https?:\/\/(www\.)?/, '').split('/')[0])
+                         : esc(r.sourceText || '');
+      return '<div class="credit"><h2>' + esc(r.name) + '</h2><p>' + esc(r.desc) + '</p>' +
+        '<p class="note">' + esc(r.notice) + ' · ' + src + ' · ' + lic + '</p>' +
         (r.photos ? creditPhotosHTML() : '') + '</div>';
     }).join('');
 }
@@ -5350,17 +5229,29 @@ function stagePage() {
   return st;
 }
 
+/* A page's title with a close button beside it, so leaving does not mean
+   scrolling to the Back button at the bottom. */
+function pageHead(title) {
+  return '<div class="pageHead"><h3>' + title + '</h3>' +
+         '<button class="btn sm pageClose" title="Close">×</button></div>';
+}
+function bindPageClose(st) {
+  var x = st.querySelector('.pageClose');
+  if (x) x.addEventListener('click', function () { Modes.enter(Modes.currentName); });
+}
+
 function showCredits() {
   var st = stagePage();
-  st.innerHTML = '<h3>Credits</h3>' + creditsHTML() +
+  st.innerHTML = pageHead('Credits') + creditsHTML() +
     '<div class="btnrow"><button class="btn primary" id="creditsBack">Back</button></div>';
   el('creditsBack').addEventListener('click', function () { Modes.enter(Modes.currentName); });
+  bindPageClose(st);
 }
 
 function showHelp() {
   var st = stagePage();
   st.innerHTML =
-    '<h3>How this works</h3>' +
+    pageHead('How this works') +
     '<p class="note">Drag to pan, scroll or <kbd>+</kbd>/<kbd>−</kbd> to zoom, click anything to inspect it. ' +
     '<kbd>L</kbd> strips the chart back to bare stars and back again, <kbd>B</kbd> toggles ' +
     'boundaries, <kbd>G</kbd> the grid, <kbd>S</kbd> the settings panel, <kbd>Space</kbd> ' +
@@ -5396,6 +5287,7 @@ function showHelp() {
     '</div>' +
     '<div class="btnrow"><button class="btn primary" id="helpBack">Back</button></div>';
   el('helpBack').addEventListener('click', function () { Modes.enter(Modes.currentName); });
+  bindPageClose(st);
 }
 
 /* ---- js/35-tools.js ---- */
