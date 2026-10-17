@@ -484,6 +484,7 @@ function switchUI(to) {
   location.href = u.href;
 }
 
+var SITE_ANALYTICS = "";
 /* ---- hoisted state ---- */
 /* Owned by whichever interface layer boots, so that reassigning one
    (the mode-override swap of OPT) is visible to the shared engine. */
@@ -1080,8 +1081,16 @@ function creditsHTML() {
   }
   return '<p class="note">This window contains credits for the resources used by the app.</p>' +
     '<div class="credit"><h2>Privacy</h2><p>The app keeps your progress and settings in ' +
-    'this browser only. It has no accounts, no analytics and no advertising, and it sends ' +
-    'nothing anywhere; the only requests it makes are for its own photographs.</p></div>' +
+    'this browser only. It has no accounts and no advertising. ' +
+    (typeof SITE_ANALYTICS !== 'undefined' && SITE_ANALYTICS === 'cloudflare'
+      ? 'On astrognosia.github.io it counts visits with Cloudflare Web Analytics, which sets ' +
+        'no cookies, stores nothing in your browser and does not identify you: it records, in ' +
+        'aggregate, which page was opened, the site you came from, your country, and the ' +
+        'browser and kind of device. Your progress, answers and settings are never sent. ' +
+        'Apart from that, the only requests the app makes are for its own photographs.'
+      : 'It has no analytics, and it sends nothing anywhere; the only requests it makes are ' +
+        'for its own photographs.') +
+    '</p></div>' +
     CREDITS.map(function (r) {
       return '<div class="credit"><h2>' + esc(r.name) + '</h2>' +
         line('Copyright notice', esc(r.notice)) +
