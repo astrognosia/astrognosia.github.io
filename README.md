@@ -10,11 +10,11 @@ the app's own build; please don't edit it by hand.
 ## Credits
 
 The full list, with every photograph's author and licence, is in the app
-under **Credits**. In short: star, constellation and deep-sky data from
-[Stellar Guesser](https://github.com/Pandicon/stellar-guesser) by Pandicon,
-with permission (Hipparcos, SIMBAD, the IAU Catalog of Star Names and the IAU
-constellation boundaries); the IAU charts' constellation figures by
-*Sky & Telescope* via Stellarium (CC BY-SA 2.0); photographs from Wikimedia
+under **Credits**. In short: stars from the Hipparcos catalogue (ESA), their
+designations and names from SIMBAD (CDS), star names and constellation
+boundaries from the IAU, the Messier and Caldwell catalogues from Wikipedia
+with SIMBAD and OpenNGC; constellation figures from Stellarium, including the
+IAU charts' figures by *Sky & Telescope* (CC BY-SA); photographs from Wikimedia
 Commons under their own licences; solar-system images from NASA; planet
 positions from JPL's orbital elements; *Star Charts 101 and Practices* by
 Fahim Rajit Hossain Shwadhin (CC BY-NC-SA 4.0).
